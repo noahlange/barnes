@@ -6,7 +6,7 @@ Barnes is an asset pipeline.
 Barnes is also a general-purpose incremental building thingy.  
 Barnes is not compatible with the previous version of a similar library of the same name.  
 
-It is all of these things.  
+It is all of these things.
 
 (It's also basically Metalsmith, but in Typescript.)
 
