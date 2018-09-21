@@ -10,7 +10,7 @@
     "@types/node-fetch": "^2.1.2"
   },
   "dependencies": {
-    "barnes": "0.2.0",
+    "barnes": "^0.2.0",
     "fs-extra": "^7.0.0",
     "gaze": "^1.1.3",
     "globby": "^8.0.1",
