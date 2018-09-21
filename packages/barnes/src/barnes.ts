@@ -94,7 +94,8 @@ function sort<T>(barnes: Barnes<T>, files: T[], callback: BarnesComparatorFn<T>)
   return new Promise((resolve, reject) => {
     ams(files, async (a, b, done) => {
       const res = await callback(a, b, files, barnes);
-      done(res);
+      const num = res > 0 ? 1 : res < 0 ? -1 : 0;
+      done(null, num);
     }, (error, result) => {
       if (error) {
         reject(error);
@@ -435,9 +436,6 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     for (const { callback, name, type } of this.stack) {
       try {
         res = await callback(res);
-        if (Array.isArray(res)) {
-          res = res.filter(f => f !== null);
-        }
       } catch (e) {
         console.error(e);
       }
