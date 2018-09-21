@@ -1,5 +1,5 @@
 import Barnes, { plugin, Plugin } from 'barnes';
-import * as parse from 'parse-glob';
+import parse from 'parse-glob';
 
 import { dotfiles, frontmatter, IFile, read as _read, source } from './utils';
 

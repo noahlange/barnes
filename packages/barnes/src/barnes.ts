@@ -1,4 +1,4 @@
-import * as sort from 'async-merge-sort';
+import ams from 'async-merge-sort';
 
 export enum Plugin {
   ALL = 'all',
@@ -40,6 +40,8 @@ export type BarnesAllFn<I, O> = (
 
 export type BarnesFromFn<O> = (barnes: Barnes<void>) => O[] | Promise<O[]>;
 
+export type BarnesComparatorFn<I> = (a: I, b: I, files: I[], barnes: Barnes<I>) => number | Promise<number>;
+
 export type BarnesReducerFn<I, O> = (
   reducer: O,
   file: I,
@@ -48,13 +50,14 @@ export type BarnesReducerFn<I, O> = (
 ) => Promise<O> | O;
 
 export type SomeKindaBarnesFunction<I, O> =
+  | BarnesComparatorFn<I>
   | BarnesMapFn<I, O>
   | BarnesFromFn<O>
   | BarnesAllFn<I, O>
   | BarnesFilterFn<I>
   | BarnesReducerFn<I, O>
   | BarnesForEachFn<I>
-  | BarnesFn<I, O>;
+  | BarnesFn<I, O>
 
 export type BarnesPlugin<F extends SomeKindaBarnesFunction<any, any>> = F & {
   BARNES: Plugin;
@@ -87,6 +90,21 @@ export function plugin<I, O>(
   return Object.assign(fn, { BARNES: type });
 }
 
+function sort<T>(barnes: Barnes<T>, files: T[], callback: BarnesComparatorFn<T>): Promise<T[]> {
+  return new Promise((resolve, reject) => {
+    ams(files, async (a, b, done) => {
+      const res = await callback(a, b, files, barnes);
+      done(res);
+    }, (error, result) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(result);
+      }
+    })
+  })
+}
+
 export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   public base: string;
   public metadata: any = {};
@@ -102,12 +120,11 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   ): Barnes<I> {
     this.stack.push({
       callback: async (files: I[]) => {
-        const out: T[] = [];
-        const list = files.slice();
-        let file = files.shift();
-        while (await predicate(file, list, this)) {
-          out.push(file);
-          file = files.shift();
+        const out = [];
+        for (const file of files) {
+          if (await predicate(file, files, this)) {
+            out.push(file);
+          }
         }
         return out;
       },
@@ -123,11 +140,10 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     this.stack.push({
       callback: async files => {
         const out = [];
-        const list = files.slice();
-        let file = files.shift();
-        while (!(await predicate(file, list, this))) {
-          out.push(file);
-          file = files.shift();
+        for (const file of files) {
+          if (!(await predicate(file, files, this))) {
+            out.push(file);
+          }
         }
         return out;
       },
@@ -159,12 +175,9 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   ): Barnes<O> {
     this.stack.push({
       callback: async files => {
-        const list = files.slice();
-        let out = initial;
-        let next = files.shift();
-        while (next) {
-          out = await reducer(out, next, list, this);
-          next = files.shift();
+        let out = await initial;
+        for (const file of files) {
+          out = await reducer(out, file, files, this);
         }
         return out;
       },
@@ -185,12 +198,10 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   ): Barnes<O> {
     this.stack.push({
       callback: async files => {
-        const list = files.slice();
+        const rev = files.reverse();
         let out = await initial;
-        let next = files.pop();
-        while (next) {
-          out = await reducer(out, next, list, this);
-          next = files.pop();
+        for (const file of rev) {
+          out = await reducer(out, file, rev, this);
         }
         return out;
       },
@@ -212,13 +223,10 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     this.stack.push({
       callback: async files => {
         const out = [];
-        const list = files.slice();
-        let next = files.shift();
-        while (next) {
-          if (await predicate(next, list, this)) {
-            out.push(next);
+        for (const file of files) {
+          if (await predicate(file, files, this)) {
+            out.push(file);
           }
-          next = files.shift();
         }
         return out;
       },
@@ -231,13 +239,10 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   public [Plugin.FIND]<I extends T>(predicate: BarnesFilterFn<I>): Barnes<I> {
     this.stack.push({
       callback: async (files: any[]) => {
-        const list = files.slice();
-        let next = files.shift();
-        while (next) {
-          if (await predicate(next, list, this)) {
-            return next;
+        for (const file of files) {
+          if (await predicate(file, files, this)) {
+            return
           }
-          next = files.shift();
         }
         return undefined;
       },
@@ -251,16 +256,15 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     predicate: BarnesFilterFn<I>
   ): Barnes<I> {
     this.stack.push({
-      callback: async files => {
-        const list = files.slice();
+      callback: async (files: I[]) => {
         let last;
-        let next = files.pop();
+        let next = files.shift();
         while (next) {
-          if (!(await predicate(next, list, this))) {
+          if (!(await predicate(next, files, this))) {
             return last;
           } else {
             last = next;
-            next = files.unshift();
+            next = files.shift();
           }
         }
         return undefined;
@@ -272,28 +276,12 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   }
 
   public [Plugin.MAX]<I extends T>(
-    comparator: (
-      a: I,
-      b: I,
-      files: I[],
-      barnes: Barnes<I>
-    ) => Promise<number> | number
+    comparator: BarnesComparatorFn<I>
   ): Barnes<I> {
     this.stack.push({
       callback: async files => {
-        const list = files.slice();
-        let a = files.shift();
-        let b = files.shift();
-        while (b) {
-          const res = await comparator(a, b, list, this);
-          if (res === 0) {
-            return a;
-          } else if (res > 0) {
-            a = b;
-          }
-          b = files.shift();
-        }
-        return a;
+        const sorted = await sort(this, files, comparator);
+        return sorted.pop();
       },
       name: comparator.name
     });
@@ -301,28 +289,12 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   }
 
   public [Plugin.MIN]<I extends T>(
-    comparator: (
-      a: I,
-      b: I,
-      files: I[],
-      barnes: Barnes<I>
-    ) => Promise<number> | number
+    comparator: BarnesComparatorFn<I>
   ): Barnes<I> {
     this.stack.push({
       callback: async files => {
-        const list = files.slice();
-        let a = files.shift();
-        let b = files.shift();
-        while (b) {
-          const res = await comparator(a, b, list, this);
-          if (res === 0) {
-            return a;
-          } else if (res < 0) {
-            a = b;
-          }
-          b = files.shift();
-        }
-        return a;
+        const sorted = await sort(this, files, comparator);
+        return sorted.shift();
       },
       name: comparator.name,
       type: Plugin.MIN
@@ -331,26 +303,10 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   }
 
   public [Plugin.SORT]<I extends T>(
-    comparator: (
-      a: I,
-      b: I,
-      files: I[],
-      barnes: Barnes<I>
-    ) => Promise<number> | number
+    comparator: BarnesComparatorFn<I>
   ): Barnes<I> {
     this.stack.push({
-      callback: files =>
-        new Promise((res, reject) => {
-          const list = files.slice();
-          sort(
-            files,
-            async (a, b, cb) => {
-              const out = await comparator(a, b, list, this);
-              cb(null, out === 0 ? 0 : out < 0 ? -1 : 1);
-            },
-            (err, sorted) => res(sorted)
-          );
-        }),
+      callback: files => sort(this, files, comparator),
       name: comparator.name,
       type: Plugin.SORT
     });
@@ -374,7 +330,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   public [Plugin.ALL]<I extends T, O>(callback: BarnesAllFn<I, O>): Barnes<O> {
     this.stack.push({
       callback: async files => {
-        return callback(files.slice(), this);
+        return callback(files, this);
       },
       name: callback.name,
       type: Plugin.ALL
@@ -385,12 +341,11 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   public [Plugin.MAP]<I extends T, O>(callback: BarnesFn<I, O>): Barnes<T> {
     this.stack.push({
       callback: async files => {
-        const out = [];
-        const list = files.slice();
+        const promises = [];
         for (const file of files) {
-          out.push(callback(file, list, this));
+          promises.push(callback(file, files, this));
         }
-        return Promise.all(out);
+        return Promise.all(promises);
       },
       name: callback.name,
       type: Plugin.MAP
@@ -403,10 +358,9 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   ): Barnes<I> {
     this.stack.push({
       callback: async files => {
-        const list = files.slice();
         const promises = [];
         for (const file of files) {
-          promises.push(callback(file, list, this));
+          promises.push(callback(file, files, this));
         }
         await Promise.all(promises);
         return;
@@ -423,9 +377,8 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     this.stack.push({
       callback: async files => {
         const out = [];
-        const list = files.slice();
         for (const file of files) {
-          out.push(await callback(file, list, this));
+          out.push(await callback(file, files, this));
         }
         return out;
       },
@@ -439,9 +392,8 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   ): Barnes<I> {
     this.stack.push({
       callback: async files => {
-        const list = files.slice();
         for (const file of files) {
-          await callback(file, list, this);
+          await callback(file, files, this);
         }
         return;
       },
