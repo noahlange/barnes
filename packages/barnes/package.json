@@ -1,0 +1,13 @@
+{
+  "name": "barnes",
+  "version": "0.2.0",
+  "main": "lib/index.js",
+  "author": "Noah Lange <noahrlange@gmail.com>",
+  "license": "MIT",
+  "types": "types/index.d.ts",
+  "dependencies": {
+    "async-merge-sort": "^0.1.3",
+    "chalk": "^2.4.1",
+    "debug": "^4.0.1"
+  }
+}

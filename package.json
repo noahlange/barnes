@@ -1,0 +1,20 @@
+{
+  "name": "barnes",
+  "author": "Noah Lange <noahrlange@gmail.com>",
+  "version": "0.2.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": {
+    "lint": "lerna exec --parallel tslint src --config ../../tslint.json",
+    "build": "lerna exec --parallel -- tsc"
+  },
+  "workspaces": [
+    "packages/*"
+  ],
+  "devDependencies": {
+    "lerna": "^3.4.0",
+    "tslint": "^5.11.0",
+    "tslint-config-prettier": "^1.15.0",
+    "typescript": "^3.0.3"
+  }
+}
