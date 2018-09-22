@@ -19,7 +19,7 @@ export default function(opts = { clean: true }) {
           : file.filename.replace(/.html$/, '/index.html');
     }
     const path = parse(file.filename);
-    const dhref = `/${path.dir}`;
+    const dhref = path.dir;
     const href = join(dhref, basename(file.filename));
     return { ...file, path, dhref, href };
   },

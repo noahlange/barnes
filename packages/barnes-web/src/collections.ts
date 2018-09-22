@@ -53,7 +53,7 @@ export default function(options: ICollectionPluginConfig = {}) {
         store[file.collection] = { ...c, [file.filename]: file };
       } else {
         for (const [name, cfg] of Object.entries(configs)) {
-          if (match([file.filename], [cfg.pattern])) {
+          if (match(file.filename, cfg.pattern).length) {
             const c = store[name];
             store[name] = { ...c, [file.filename]: file };
           }

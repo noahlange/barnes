@@ -63,9 +63,7 @@ export default function(path: string) {
         const replace = parsed.base === '.' ? '' : parsed.base;
         return {
           ...f,
-          filename: f.filename
-            .replace(replace, '')
-            .replace(/^\//, '')
+          filename: f.filename.replace(replace, '').replace(/^\/\//, '')
         };
       })
     ];

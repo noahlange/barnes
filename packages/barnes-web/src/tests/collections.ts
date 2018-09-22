@@ -57,3 +57,25 @@ test('should build collections from metadata', async t => {
 
   t.deepEqual(res, { humdingers });
 });
+
+test('should build multiple collections', async t => {
+
+  const humdingers= [
+    { filename: '1', collection: 'humdingers' },
+    { filename: '2', collection: 'humdingers' }
+  ];
+
+  const files = [
+    { filename: 'files/foo/index.md' },
+    { filename: 'files/bar.md' },
+    { filename: 'file/boo.md' }
+  ];
+
+  const res = await new Barnes()
+    .use(() => [ ...humdingers, ...files ])
+    .use(collections({ files: 'files/**/*' }))
+    .all((_, barnes) => barnes.metadata.collections.files)
+    .count();
+
+  t.deepEqual(res, 2);
+})
