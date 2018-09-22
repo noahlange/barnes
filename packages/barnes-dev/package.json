@@ -1,12 +1,12 @@
 {
   "name": "barnes-dev",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "main": "lib/index.js",
   "author": "Noah Lange <noahrlange@gmail.com>",
   "license": "MIT",
   "types": "types/index.d.ts",
   "dependencies": {
-    "barnes": "^0.2.1",
+    "barnes": "^0.2.2",
     "ecstatic": "^3.3.0",
     "tiny-lr": "^1.1.1"
   }

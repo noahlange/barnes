@@ -1,12 +1,12 @@
 {
   "name": "barnes-optimize",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "author": "Noah Lange <noahrlange@gmail.com>",
   "license": "MIT",
   "main": "lib/index.js",
   "types": "types/index.d.ts",
   "dependencies": {
-    "barnes": "^0.2.1",
+    "barnes": "^0.2.2",
     "base-64": "^0.1.0",
     "cheerio": "^1.0.0-rc.2",
     "fs-extra": "^7.0.0",
