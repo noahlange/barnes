@@ -314,7 +314,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.TAP]<I extends T>(callback: BarnesFn<I, void>): Barnes<I> {
+  public [Plugin.TAP]<I extends T>(callback: BarnesFn<I, any>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         for (const file of files) {

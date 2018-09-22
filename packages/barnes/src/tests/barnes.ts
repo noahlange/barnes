@@ -57,3 +57,12 @@ test('count', async t => {
   const res = await new Barnes().from(() => [1, 2, 3]).count();
   t.is(res, 3);
 });
+
+test('tap', async t => {
+  const out = [];
+  await new Barnes()
+    .from(() => [1, 2, 3, 4, 5])
+    .tap(n => out.push(n));
+
+  t.deepEqual(out, [ 1, 2, 3, 4, 5 ]);
+})

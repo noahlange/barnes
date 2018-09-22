@@ -12,12 +12,11 @@ export default path => {
     await writeFile(name, contents, options);
   };
   return plugin<IFile, IFile>(async function write(file, files, barnes) {
-    barnes.metadata.writePath = path;
-    file.filename = join(barnes.base, path, file.filename);
-    await w(file.filename, file.contents, { encoding: 'utf8' });
+    const filename = join(barnes.base, path, file.filename);
+    await w(filename, file.contents, { encoding: 'utf8' });
     if (file === files[files.length - 1]) {
       log(`Wrote ${ files.length } files to disk.`, 'success');
     }
-    return file;
+    return { ...file, filename };
   }, Plugin.MAP);
 };

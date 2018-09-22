@@ -1,7 +1,7 @@
 {
   "name": "barnes",
   "author": "Noah Lange <noahrlange@gmail.com>",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "license": "MIT",
   "scripts": {
@@ -12,14 +12,15 @@
   "workspaces": [
     "packages/*"
   ],
+  "dependencies": {},
   "devDependencies": {
+    "ava": "^1.0.0-beta.8",
     "lerna": "^3.4.0",
+    "nyc": "^13.0.1",
+    "ts-node": "^7.0.1",
     "tslint": "^5.11.0",
     "tslint-config-prettier": "^1.15.0",
-    "typescript": "^3.0.3",
-    "ava": "^1.0.0-beta.8",
-    "nyc": "^13.0.1",
-    "ts-node": "^7.0.1"
+    "typescript": "^3.0.3"
   },
   "ava": {
     "files": [

@@ -3,7 +3,7 @@ import { Gaze } from 'gaze';
 import throttle from 'lodash.throttle';
 import dedupe from 'lodash.uniq';
 import parse from 'parse-glob';
-import { join } from 'path';
+import { join, sep } from 'path';
 
 import { dotfiles, frontmatter, IFile, read, source } from './utils';
 
@@ -63,7 +63,8 @@ export default function(path: string) {
         const replace = parsed.base === '.' ? '' : parsed.base;
         return {
           ...f,
-          filename: f.filename.replace(replace, '').replace(/^\/\//, '')
+          filename: f.filename.replace(replace, '')
+            .replace(new RegExp(`^${sep}`), '')
         };
       })
     ];

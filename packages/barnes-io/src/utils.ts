@@ -5,7 +5,7 @@ import { ensureFile } from 'fs-extra';
 import globby from 'globby';
 import gm from 'gray-matter';
 import isUTF8 from 'is-utf8';
-import { basename, join } from 'path';
+import { basename, join, sep } from 'path';
 import { promisify } from 'util';
 
 export interface IFile {
@@ -30,7 +30,7 @@ export function read() {
   return plugin<string, IFile>(async (file, files, barnes) => {
     return {
       contents: await readFileP(file),
-      filename: file.replace(barnes.base, ''),
+      filename: file.replace(barnes.base + sep, ''),
       stats: await statP(file),
     };
   }, Plugin.MAP);

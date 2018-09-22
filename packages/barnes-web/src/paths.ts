@@ -1,5 +1,5 @@
 import { plugin, Plugin } from 'barnes';
-import { basename, join, parse, ParsedPath } from 'path';
+import { basename, join, parse, ParsedPath, sep } from 'path';
 
 import { IFile } from './index';
 
@@ -16,11 +16,12 @@ export default function(opts = { clean: true }) {
       file.filename =
         base === 'index.html'
           ? file.filename
-          : file.filename.replace(/.html$/, '/index.html');
+          : file.filename.replace(/.html$/, `${sep}index.html`);
     }
     const path = parse(file.filename);
-    const dhref = path.dir;
+    const dhref = `${sep}${path.dir}`;
     const href = join(dhref, basename(file.filename));
+
     return { ...file, path, dhref, href };
   },
   Plugin.MAP);

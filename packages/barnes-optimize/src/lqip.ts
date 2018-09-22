@@ -4,7 +4,7 @@ import { CheerioStatic, load } from 'cheerio';
 import isImage from 'is-image';
 import { tmpdir } from 'os';
 import Queue from 'p-queue';
-import { join } from 'path';
+import { join, sep } from 'path';
 import sharp from 'sharp';
 import sqip from 'sqip';
 import SVGO from 'svgo';
@@ -97,7 +97,7 @@ export default function lazyload(options: ILazyLoadOptions) {
         $('img').each((i, e) => {
           const src = $(e).attr('src');
           images.push(
-            src.startsWith('/')
+            src.startsWith(sep)
               ? src.slice(1)
               : src
           );
@@ -151,7 +151,7 @@ export default function lazyload(options: ILazyLoadOptions) {
       let dirty = false;
       $('img').each((i, e) => {
         let src = $(e).attr('src');
-        src = src.startsWith('/') ? src.slice(1) : src;
+        src = src.startsWith(sep) ? src.slice(1) : src;
         const b64 = b64cache[src];
         if (b64) {
           imagesChanged++;

@@ -9,12 +9,7 @@ export default function serve(path: string, port: number = 8080) {
   let server = null;
   return plugin(async (files, barnes) => {
     if (!server) {
-      const e = ecstatic({
-        autoIndex: true,
-        gzip: true,
-        root: resolve(barnes.base, path),
-        showDir: true,
-      });
+      const e = ecstatic({ root: resolve(barnes.base, path) });
       server = createServer(e).listen(port);
       log(`Barnes is serving content from ${path} on port ${port}.`);
     }

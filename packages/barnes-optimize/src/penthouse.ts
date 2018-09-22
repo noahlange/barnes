@@ -48,7 +48,9 @@ export default function(options: IPenthousePluginOptions) {
     let inlined = 0;
 
     for (const file of files) {
-      cssCache[file.filename] = file.contents.toString();
+      if (o.patterns.css.test(file.filename)) {
+        cssCache[file.filename] = file.contents.toString();
+      }
     }
 
     /**
@@ -76,16 +78,16 @@ export default function(options: IPenthousePluginOptions) {
           inline = file;
         }
 
-        const path = join(tmpdir(), file.filename);
-        await write(path, file.contents, 'utf8');
-
         try {
           if (!inline) {
+            const path = join(tmpdir(), file.filename);
+            await write(path, file.contents, 'utf8');
             inline = await penthouse({ url: `file:///${path}`, cssString });
             cache[tpl] = inline;
           }
 
           const $ = load(file.contents.toString());
+
           $('head').append(`<style type="text/css">${inline}</style>`);
           $('head link').each((i, e) => $('body').append($(e)));
           $('head link').remove();
@@ -102,7 +104,7 @@ export default function(options: IPenthousePluginOptions) {
       .addAll(promises);
 
     if (inlined) {
-      log(`Inlined ${ inlined } files.`, 'success');
+      log(`Inlined into ${ inlined } files.`, 'success');
     }
 
     return files;
