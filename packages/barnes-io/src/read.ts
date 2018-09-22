@@ -16,9 +16,12 @@ export default function(path?: string) {
           ...prev,
           ...curr.map(f => {
             const parsed = parse(path);
+            const replace = parsed.base === '.' ? '' : parsed.base;
             return {
               ...f,
-              filename: f.filename.replace(parsed.base, '')
+              filename: f.filename
+                .replace(replace, '')
+                .replace(/^\//, '')
             };
           })
         ]

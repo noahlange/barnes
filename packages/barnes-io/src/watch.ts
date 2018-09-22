@@ -60,9 +60,12 @@ export default function(path: string) {
       ...files,
       ...out.map(f => {
         const parsed = parse(path);
+        const replace = parsed.base === '.' ? '' : parsed.base;
         return {
           ...f,
-          filename: f.filename.replace(parsed.base, '')
+          filename: f.filename
+            .replace(replace, '')
+            .replace(/^\//, '')
         };
       })
     ];

@@ -112,7 +112,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
 
   private stack = [];
 
-  public constructor(base: string = __dirname) {
+  public constructor(base: string = process.cwd()) {
     this.base = base;
   }
 
@@ -242,7 +242,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
       callback: async (files: any[]) => {
         for (const file of files) {
           if (await predicate(file, files, this)) {
-            return
+            return file;
           }
         }
         return undefined;
@@ -268,7 +268,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
             next = files.shift();
           }
         }
-        return undefined;
+        return last;
       },
       name: predicate.name,
       type: Plugin.FIND_LAST
@@ -314,7 +314,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.TAP]<I extends T>(callback: BarnesFn<I, I>): Barnes<I> {
+  public [Plugin.TAP]<I extends T>(callback: BarnesFn<I, void>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         for (const file of files) {
@@ -339,7 +339,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this as Barnes<O>;
   }
 
-  public [Plugin.MAP]<I extends T, O>(callback: BarnesFn<I, O>): Barnes<T> {
+  public [Plugin.MAP]<I extends T, O>(callback: BarnesFn<I, O>): Barnes<O> {
     this.stack.push({
       callback: async files => {
         const promises = [];
@@ -351,7 +351,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
       name: callback.name,
       type: Plugin.MAP
     });
-    return this;
+    return this as Barnes<O>;
   }
 
   public [Plugin.FOR_EACH]<I extends T>(
@@ -413,16 +413,23 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this as Barnes<O>;
   }
 
-  public use<I extends T>(plugin: BarnesPlugin<BarnesFilterFn<I>>): Barnes<I>;
+  public use<I extends T>(
+    plugin: BarnesPlugin<BarnesFilterFn<I>>
+  ): Barnes<I>;
   public use<I extends T>(
     plugin: BarnesPlugin<BarnesForEachFn<I>>
   ): Barnes<void>;
   public use<I extends T, O>(
     plugin: BarnesPlugin<BarnesAllFn<I, O>> | BarnesPlugin<BarnesMapFn<I, O>>
   ): Barnes<O>;
-  public use<O>(plugin: BarnesPlugin<BarnesFromFn<O>>): Barnes<O>;
+  public use<O>(
+    plugin: BarnesPlugin<BarnesFromFn<O>>
+  ): Barnes<O>;
+  public use<I, O>(
+    plugin: BarnesAllFn<I, O>
+  )
   public use<I extends T, O>(
-    plugin: BarnesPlugin<SomeKindaBarnesFunction<I, O>>
+    plugin: BarnesPlugin<SomeKindaBarnesFunction<I, O>> | BarnesAllFn<I, O>
   ): Barnes<O> {
     const plugins = Array.isArray(plugin) ? plugin : [plugin];
     for (const p of plugins) {

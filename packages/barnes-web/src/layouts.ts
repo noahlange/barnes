@@ -3,6 +3,7 @@ import jsTransformer from 'jstransformer';
 import toTransformer from 'jstransformer-jstransformer';
 import match from 'multimatch';
 import { join } from 'path';
+import { IFile } from './index';
 
 interface IBarnesLayoutsOpts {
   pattern?: string;
@@ -11,11 +12,6 @@ interface IBarnesLayoutsOpts {
   options: object;
 };
 
-export interface IFile {
-  filename: string;
-  layout: string;
-  contents: Buffer;
-}
 
 export default (opts: IBarnesLayoutsOpts) => {
   return plugin(async (file: IFile, files: IFile[], barnes: Barnes<IFile>) => {

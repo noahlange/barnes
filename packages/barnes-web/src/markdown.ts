@@ -2,7 +2,7 @@ import { plugin, Plugin } from 'barnes';
 import MarkdownIt from 'markdown-it';
 import highlight from 'markdown-it-prism';
 
-import { IFile } from './layouts';
+import { IFile } from './index';
 
 interface IBarnesMarkdownOpts {
   markdown?: MarkdownIt.Options;

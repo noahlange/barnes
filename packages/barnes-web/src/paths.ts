@@ -1,7 +1,7 @@
 import { plugin, Plugin } from 'barnes';
 import { basename, join, parse, ParsedPath } from 'path';
 
-import { IFile } from './layouts';
+import { IFile } from './index';
 
 export interface IPathedFile extends IFile {
   path: ParsedPath;
