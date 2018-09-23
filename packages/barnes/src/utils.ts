@@ -14,7 +14,7 @@ export function logger(pkg: string) {
     danger: chalk.red,
     info: chalk.blue,
     success: chalk.green,
-    warning: chalk.yellow,
+    warning: chalk.yellow
   };
   return (message: string, level: ErrorLevel = 'info') => {
     // tslint:disable-next-line

@@ -1,3 +1,5 @@
+/* tslint:disable:unified-signatures */
+
 import ams from 'async-merge-sort';
 
 export enum Plugin {
@@ -29,76 +31,80 @@ export type BarnesFn<I, O> = (
   barnes: Barnes<I>
 ) => Promise<O> | O;
 
-export type BarnesMapFn<I, O> = BarnesFn<I, O>;
-export type BarnesForEachFn<I> = BarnesFn<I, void>;
-export type BarnesFilterFn<I> = BarnesFn<I, boolean>;
+export type Useable<I, O> =
+  | BarnesPlugin<SomeKindaFunction<I, O>>
+  | BatchFn<I, O>
+  | Barnes<O>;
+export type MapFn<I, O> = BarnesFn<I, O>;
+export type ForEachFn<I> = BarnesFn<I, void>;
+export type FilterFn<I> = BarnesFn<I, boolean>;
 
-export type BarnesAllFn<I, O> = (
+export type BatchFn<I, O> = (
   files: I[],
   barnes: Barnes<I>
 ) => O[] | Promise<O[]>;
 
-export type BarnesFromFn<O> = (barnes: Barnes<void>) => O[] | Promise<O[]>;
+export type FromFn<O> = (barnes: Barnes<void>) => O[] | Promise<O[]>;
 
-export type BarnesComparatorFn<I> = (
+export type ComparatorFn<I> = (
   a: I,
   b: I,
   files: I[],
   barnes: Barnes<I>
 ) => number | Promise<number>;
 
-export type BarnesReducerFn<I, O> = (
+export type ReducerFn<I, O> = (
   reducer: O,
   file: I,
   files: I[],
   barnes: Barnes<I>
 ) => Promise<O> | O;
 
-export type SomeKindaBarnesFunction<I, O> =
-  | BarnesComparatorFn<I>
-  | BarnesMapFn<I, O>
-  | BarnesFromFn<O>
-  | BarnesAllFn<I, O>
-  | BarnesFilterFn<I>
-  | BarnesReducerFn<I, O>
-  | BarnesForEachFn<I>
+export type SomeKindaFunction<I, O> =
+  | ComparatorFn<I>
+  | MapFn<I, O>
+  | FromFn<O>
+  | BatchFn<I, O>
+  | FilterFn<I>
+  | ReducerFn<I, O>
+  | ForEachFn<I>
   | BarnesFn<I, O>;
 
-export type BarnesPlugin<F extends SomeKindaBarnesFunction<any, any>> = F & {
+export type BarnesPlugin<F extends SomeKindaFunction<any, any>> = F & {
   BARNES: Plugin;
 };
 
 export function plugin<O>(
-  fn: BarnesFromFn<O>,
+  fn: FromFn<O>,
   type: Plugin.FROM
-): BarnesPlugin<BarnesFromFn<O>>;
+): BarnesPlugin<FromFn<O>>;
 
 export function plugin<I, O>(
-  fn: BarnesMapFn<I, O>,
+  fn: MapFn<I, O>,
   type: Plugin.MAP
-): BarnesPlugin<BarnesMapFn<I, O>>;
+): BarnesPlugin<MapFn<I, O>>;
 
 export function plugin<I, O>(
-  fn: BarnesFilterFn<I>,
+  fn: FilterFn<I>,
   type: Plugin.FILTER
-): BarnesPlugin<BarnesFilterFn<I>>;
+): BarnesPlugin<FilterFn<I>>;
 
 export function plugin<I, O>(
-  fn: BarnesAllFn<I, O>,
+  fn: BatchFn<I, O>,
   type: Plugin.ALL
-): BarnesPlugin<BarnesAllFn<I, O>>;
+): BarnesPlugin<BatchFn<I, O>>;
 
 export function plugin<I, O>(
-  fn: SomeKindaBarnesFunction<I, O>,
+  fn: SomeKindaFunction<I, O>,
   type: never
-): BarnesPlugin<SomeKindaBarnesFunction<I, O>> {
+): BarnesPlugin<SomeKindaFunction<I, O>> {
   return Object.assign(fn, { BARNES: type });
 }
 
 function sort<T>(
   barnes: Barnes<T>,
   files: T[],
-  callback: BarnesComparatorFn<T>
+  callback: ComparatorFn<T>
 ): Promise<T[]> {
   return new Promise((resolve, reject) => {
     ams(
@@ -129,9 +135,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     this.base = base;
   }
 
-  public [Plugin.TAKE_WHILE]<I extends T>(
-    predicate: BarnesFilterFn<I>
-  ): Barnes<I> {
+  public [Plugin.TAKE_WHILE]<I extends T>(predicate: FilterFn<I>): Barnes<I> {
     this.stack.push({
       callback: async (files: I[]) => {
         const out = [];
@@ -148,9 +152,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.TAKE_UNTIL]<I extends T>(
-    predicate: BarnesFilterFn<I>
-  ): Barnes<I> {
+  public [Plugin.TAKE_UNTIL]<I extends T>(predicate: FilterFn<I>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         const out = [];
@@ -233,7 +235,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this as Barnes<number>;
   }
 
-  public [Plugin.FILTER]<I extends T>(predicate: BarnesFilterFn<I>): Barnes<I> {
+  public [Plugin.FILTER]<I extends T>(predicate: FilterFn<I>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         const out = [];
@@ -250,7 +252,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.FIND]<I extends T>(predicate: BarnesFilterFn<I>): Barnes<I> {
+  public [Plugin.FIND]<I extends T>(predicate: FilterFn<I>): Barnes<I> {
     this.stack.push({
       callback: async (files: any[]) => {
         for (const file of files) {
@@ -266,9 +268,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.FIND_LAST]<I extends T>(
-    predicate: BarnesFilterFn<I>
-  ): Barnes<I> {
+  public [Plugin.FIND_LAST]<I extends T>(predicate: FilterFn<I>): Barnes<I> {
     this.stack.push({
       callback: async (files: I[]) => {
         let last;
@@ -289,9 +289,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.MAX]<I extends T>(
-    comparator: BarnesComparatorFn<I>
-  ): Barnes<I> {
+  public [Plugin.MAX]<I extends T>(comparator: ComparatorFn<I>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         const sorted = await sort(this, files, comparator);
@@ -302,9 +300,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.MIN]<I extends T>(
-    comparator: BarnesComparatorFn<I>
-  ): Barnes<I> {
+  public [Plugin.MIN]<I extends T>(comparator: ComparatorFn<I>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         const sorted = await sort(this, files, comparator);
@@ -316,9 +312,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.SORT]<I extends T>(
-    comparator: BarnesComparatorFn<I>
-  ): Barnes<I> {
+  public [Plugin.SORT]<I extends T>(comparator: ComparatorFn<I>): Barnes<I> {
     this.stack.push({
       callback: files => sort(this, files, comparator),
       name: comparator.name,
@@ -341,7 +335,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.ALL]<I extends T, O>(callback: BarnesAllFn<I, O>): Barnes<O> {
+  public [Plugin.ALL]<I extends T, O>(callback: BatchFn<I, O>): Barnes<O> {
     this.stack.push({
       callback: async files => {
         return callback(files, this);
@@ -367,9 +361,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this as Barnes<O>;
   }
 
-  public [Plugin.FOR_EACH]<I extends T>(
-    callback: BarnesForEachFn<I>
-  ): Barnes<I> {
+  public [Plugin.FOR_EACH]<I extends T>(callback: ForEachFn<I>): Barnes<I> {
     this.stack.push({
       callback: async files => {
         const promises = [];
@@ -402,7 +394,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   }
 
   public [Plugin.FOR_EACH_SERIES]<I extends T>(
-    callback: BarnesForEachFn<I>
+    callback: ForEachFn<I>
   ): Barnes<I> {
     this.stack.push({
       callback: async files => {
@@ -417,7 +409,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this;
   }
 
-  public [Plugin.FROM]<O>(callback: BarnesFromFn<O>): Barnes<O> {
+  public [Plugin.FROM]<O>(callback: FromFn<O>): Barnes<O> {
     this.stack.push({
       callback: async () => callback(this as Barnes<void>),
       name: callback.name,
@@ -426,28 +418,32 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this as Barnes<O>;
   }
 
-  public use<I extends T>(plugin: BarnesPlugin<BarnesFilterFn<I>>): Barnes<I>;
-  public use<I extends T>(
-    useable: BarnesPlugin<BarnesForEachFn<I>>
-  ): Barnes<void>;
-  public use<I extends T, O>(
-    useable: BarnesPlugin<BarnesAllFn<I, O>> | BarnesPlugin<BarnesMapFn<I, O>>
-  ): Barnes<O>;
-  public use<O>(useable: BarnesPlugin<BarnesFromFn<O>>): Barnes<O>;
-  public use<I, O>(useable: BarnesAllFn<I, O>);
-  public use<I extends T, O>(
-    useable: BarnesPlugin<SomeKindaBarnesFunction<I, O>> | BarnesAllFn<I, O>
-  ): Barnes<O> {
-    const useables = Array.isArray(useable) ? useable : [useable];
-    for (const u of useables) {
-      this[u.BARNES || Plugin.ALL].call(this, u);
+  public use<I extends T>(plugin: BarnesPlugin<FilterFn<I>>): Barnes<I>;
+  public use<I extends T>(useable: BarnesPlugin<ForEachFn<I>>): Barnes<void>;
+  public use<I extends T, O>(useable: BarnesPlugin<BatchFn<I, O>>): Barnes<O>;
+  public use<I extends T, O>(useable: BarnesPlugin<MapFn<I, O>>): Barnes<O>;
+  public use<I extends T, O>(useable: BatchFn<I, O> | Barnes<O>);
+  public use<O>(useable: BarnesPlugin<FromFn<O>>): Barnes<O>;
+
+  public use<I extends T, O>(useable: Useable<I, O>): Barnes<O> {
+    if (useable instanceof Barnes) {
+      this.stack.push({
+        callback: async files => {
+          const res = await useable;
+          return [...files, ...res];
+        },
+        type: Plugin.ALL
+      });
+    } else {
+      const cb = (useable as any).BARNES || Plugin.ALL;
+      this[cb].call(this, useable);
     }
     return this as Barnes<O>;
   }
 
   public async execute() {
     let res = [];
-    for (const { callback, name, type } of this.stack) {
+    for (const { callback } of this.stack) {
       try {
         res = await callback(res);
       } catch (e) {

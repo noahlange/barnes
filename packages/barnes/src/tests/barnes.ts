@@ -1,6 +1,19 @@
 import test from 'ava';
 import Barnes from '../barnes';
 
+test('barnes in barnes in barnes', async t => {
+  const one = new Barnes().from(() => [1, 2, 3, 4, 5]);
+
+  const two = new Barnes().from(() => [1, 2, 3, 4, 5]);
+
+  const three = await new Barnes()
+    .use(one)
+    .use(two)
+    .reduce((a, b) => a + b, 0);
+
+  t.is(three, 30);
+});
+
 test('min, max, sort', async t => {
   const max = await new Barnes()
     .from(() => [1, 2, 3, 4, 5])
