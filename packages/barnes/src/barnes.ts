@@ -128,6 +128,7 @@ function sort<T>(
 export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
   public base: string;
   public metadata: any = {};
+  public parent: Barnes<any> = null;
 
   private stack = [];
 
@@ -427,6 +428,7 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
 
   public use<I extends T, O>(useable: Useable<I, O>): Barnes<O> {
     if (useable instanceof Barnes) {
+      useable.parent = this;
       this.stack.push({
         callback: async files => {
           const res = await useable;

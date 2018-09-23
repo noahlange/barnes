@@ -33,5 +33,6 @@ export default (opts: IBarnesLayoutsOpts) => {
         // no-op
       }
     }
+    return file;
   }, Plugin.MAP);
 };

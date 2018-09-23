@@ -6,6 +6,7 @@
   "main": "lib/index.js",
   "types": "./types/index.d.ts",
   "dependencies": {
+    "async-merge-sort": "^0.1.3",
     "barnes": "^0.2.2",
     "jstransformer": "^1.0.0",
     "jstransformer-jstransformer": "^1.1.6",

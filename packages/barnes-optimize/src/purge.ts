@@ -49,39 +49,41 @@ export default function purge(options: IBarnesPurgePluginOpts = {}) {
       cssCache[file.filename] = file;
     });
 
-    const purged = new PurgeCSS({
-      content: Object.values(htmlCache).map(f => ({
-        extension: 'html',
-        raw: f.contents.toString()
-      })),
-      css: Object.values(cssCache).map(f => ({
-        extension: 'css',
-        file: f.filename,
-        raw: f.contents.toString()
-      }))
-    }).purge();
-
-    const allStyles = Object.entries(cssCache);
-
-    for (let i = 0; i < purged.length; i++) {
-      const [filename, file] = allStyles[i];
-      const css = purged[i].css;
-      // if the modified file isn't in the changed file list, add it.
-      const found = files.findIndex(f => f.filename === filename);
-      if (found > -1) {
-        files[found] = {
-          ...files[found],
-          contents: Buffer.from(css)
-        };
-        total++;
-      } else if (file.contents.toString() !== css) {
-        files.push({ ...file, contents: Buffer.from(css) });
-        total++;
+    try {
+      const purged = new PurgeCSS({
+        content: Object.values(htmlCache).map(f => ({
+          extension: 'html',
+          raw: f.contents.toString()
+        })),
+        css: Object.values(cssCache).map(f => ({
+          extension: 'css',
+          file: f.filename,
+          raw: f.contents.toString()
+        }))
+      }).purge();
+      const allStyles = Object.entries(cssCache);
+      for (let i = 0; i < purged.length; i++) {
+        const [filename, file] = allStyles[i];
+        const css = purged[i].css;
+        // if the modified file isn't in the changed file list, add it.
+        const found = files.findIndex(f => f.filename === filename);
+        if (found > -1) {
+          files[found] = {
+            ...files[found],
+            contents: Buffer.from(css)
+          };
+          total++;
+        } else if (file.contents.toString() !== css) {
+          files.push({ ...file, contents: Buffer.from(css) });
+          total++;
+        }
       }
+    } catch (e) {
+      log(e.message, 'danger');
     }
 
     if (total) {
-      log(`Purged ${total} files.`, 'success');
+      log(`Purged ${total} CSS files.`, 'success');
     }
 
     return files;

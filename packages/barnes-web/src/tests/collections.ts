@@ -4,8 +4,8 @@ import collections from '../collections';
 
 test('should build collections with pattern shorthand', async t => {
   const files = [
-    { filename: 'files/foo/index.md' },
-    { filename: 'files/bar.md' }
+    { filename: 'files/bar.md' },
+    { filename: 'files/foo/index.md' }
   ];
 
   const res = await new Barnes()
@@ -22,8 +22,8 @@ test('should build collections with pattern shorthand', async t => {
 
 test('should build collections with pattern longhand', async t => {
   const files = [
-    { filename: 'files/foo/index.md' },
-    { filename: 'files/bar.md' }
+    { filename: 'files/bar.md' },
+    { filename: 'files/foo/index.md' }
   ];
 
   const res = await new Barnes()
@@ -47,8 +47,8 @@ test('should build collections from metadata', async t => {
   }
 
   const humdingers: IHumdinger[] = [
-    { filename: '1', collection: 'humdingers' },
-    { filename: '2', collection: 'humdingers' }
+    { filename: '2', collection: 'humdingers' },
+    { filename: '1', collection: 'humdingers' }
   ];
 
   const res = await new Barnes()
@@ -56,7 +56,7 @@ test('should build collections from metadata', async t => {
     .use(collections())
     .all((_, barnes) => barnes.metadata.collections);
 
-  t.deepEqual(res, { humdingers });
+  t.deepEqual(res, { humdingers: humdingers.reverse() });
 });
 
 test('should build multiple collections', async t => {

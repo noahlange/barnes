@@ -9,6 +9,9 @@ import { dotfiles, frontmatter, IFile, read, source } from './utils';
 
 const log = logger('fs/watch');
 
+// recursive parent fetcher
+const p = (barnes: Barnes<any>) => (barnes.parent ? p(barnes.parent) : barnes);
+
 export default function(glob: string) {
   let gaze;
   let active = [];
@@ -18,7 +21,7 @@ export default function(glob: string) {
     const throttled = throttle(async () => {
       active = dedupe(toProcess);
       log(`${active.length} files updated, rebuilding.`, 'info');
-      await barnes.execute();
+      await p(barnes).execute();
     }, 2500);
 
     return plugin(async filenames => {

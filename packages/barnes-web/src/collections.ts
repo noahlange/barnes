@@ -1,3 +1,4 @@
+import ams from 'async-merge-sort';
 import Barnes, { plugin, Plugin } from 'barnes';
 import match from 'multimatch';
 
@@ -9,26 +10,55 @@ interface ICollectionConfig extends IUserCollectionConfig {
 
 interface IUserCollectionConfig {
   pattern: string;
-  sortBy?: string;
-  reverse?: boolean;
+  sort?: (a: IFile, b: IFile) => Promise<number> | number;
 }
 
 interface ICollectionPluginConfig {
   [key: string]: string | IUserCollectionConfig;
 }
 
-const map = ([name, cfg]): ICollectionConfig => {
-  const obj: ICollectionConfig = {
-    name,
-    pattern: null,
-    reverse: true,
-    sortBy: 'date'
-  };
-  if (typeof cfg === 'string') {
-    return { ...obj, pattern: cfg };
+const defaultConfig: ICollectionConfig = {
+  name: null,
+  pattern: null,
+  sort: (b: IFile, a: IFile) => {
+    const astats = a.stats;
+    const bstats = b.stats;
+    if (astats && bstats) {
+      return (
+        b.stats.ctime.getUTCMilliseconds() - a.stats.ctime.getUTCMilliseconds()
+      );
+    } else {
+      return b.filename.localeCompare(a.filename);
+    }
   }
-  return { ...obj, ...cfg };
 };
+
+const map = ([name, cfg]): ICollectionConfig => {
+  if (typeof cfg === 'string') {
+    return { ...defaultConfig, name, pattern: cfg };
+  }
+  return { ...defaultConfig, name, ...cfg };
+};
+
+function sort<T>(entries: T[], callback) {
+  return new Promise((resolve, reject) => {
+    ams(
+      entries,
+      async (a, b, done) => {
+        const res = await callback(a, b);
+        const num = res > 0 ? 1 : res < 0 ? -1 : 0;
+        done(null, num);
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
+      }
+    );
+  });
+}
 
 export default function(options: ICollectionPluginConfig = {}) {
   const configs: Record<string, ICollectionConfig> = Object.entries(options)
@@ -60,9 +90,16 @@ export default function(options: ICollectionPluginConfig = {}) {
       }
     }
 
-    barnes.metadata.collections = Object.entries(store).reduce(
-      (a, [name, entries]) => ({ ...a, [name]: Object.values(entries) }),
-      {}
+    barnes.metadata.collections = await Object.entries(store).reduce(
+      async (a, [name, entries]) => {
+        const res = await a;
+        const sorter = (configs[name] || defaultConfig).sort;
+        const sorted = sorter
+          ? await sort(Object.values(entries), sorter)
+          : Object.values(entries);
+        return { ...res, [name]: sorted };
+      },
+      Promise.resolve({})
     );
 
     return files;
