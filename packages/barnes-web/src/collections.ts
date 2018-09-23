@@ -43,7 +43,6 @@ export default function(options: ICollectionPluginConfig = {}) {
     files: IFile[],
     barnes: Barnes<IFile>
   ) {
-
     for (const file of files) {
       if (file.collection) {
         if (!(file.collection in store)) {

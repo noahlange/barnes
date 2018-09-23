@@ -6,31 +6,36 @@ import { join } from 'path';
 import { IFile } from './index';
 
 interface IBarnesLayoutsOpts {
-  pattern?: string;
   default: string;
   directory?: string;
   options: object;
-};
+  pattern?: string;
+}
 
+const p = b => (b.parent ? p(b.parent) : b);
 
 export default (opts: IBarnesLayoutsOpts) => {
-  return plugin(async (file: IFile, files: IFile[], barnes: Barnes<IFile>) => {
-    const render = match([ file.filename ], [opts.pattern || '**/*.html']);
-    if (render.length) {
-      const template = file.layout || opts.default;
-      const path = join(barnes.base, opts.directory || '', template);
-      try {
-        const t = jsTransformer(toTransformer)
-        const contents = await t.renderFile(path, opts.options, {
-          ...barnes.metadata,
-          ...file,
-          files
-        });
-        file.contents = Buffer.from(contents.body);
-      } catch (e) {
-        // no-op
+  const options = { pattern: '**/*.html', directory: '', ...opts };
+  return plugin(async (files: IFile[], barnes: Barnes<IFile>) => {
+    const out = [];
+    for (const file of files) {
+      const render = match([file.filename], [options.pattern]);
+      if (render.length) {
+        const template = file.layout || options.default;
+        const path = join(barnes.base, options.directory, template);
+        try {
+          const t = jsTransformer(toTransformer);
+          const contents = await t.renderFile(path, options.options, {
+            ...barnes.metadata,
+            ...file,
+            files
+          });
+          file.contents = Buffer.from(contents.body);
+        } catch (e) {
+          // no-op
+        }
       }
     }
-    return file;
-  }, Plugin.MAP);
+    return out;
+  }, Plugin.ALL);
 };

@@ -65,7 +65,6 @@ function svgoOptions() {
 }
 
 export default function lazyload(options: ILazyLoadOptions) {
-
   const log = logger('optimize/lquip');
   const md5cache: Record<string, string> = {};
   const b64cache: Record<string, string> = {};
@@ -84,11 +83,13 @@ export default function lazyload(options: ILazyLoadOptions) {
     let imagesChanged = 0;
     let filesChanged = 0;
 
-    const fileHash: Record<string, IFile> 
-      = files.reduce((a, b) => ({ ...a, [b.filename]: b }), {});
+    const fileHash: Record<string, IFile> = files.reduce(
+      (a, b) => ({ ...a, [b.filename]: b }),
+      {}
+    );
     const toProcess: string[] = [];
     const toRewrite: Record<string, CheerioStatic> = {};
-  
+
     for (const file of files) {
       const filename = file.filename;
       if (/.html$/.test(filename)) {
@@ -96,11 +97,7 @@ export default function lazyload(options: ILazyLoadOptions) {
         const images: string[] = [];
         $('img').each((i, e) => {
           const src = $(e).attr('src');
-          images.push(
-            src.startsWith(sep)
-              ? src.slice(1)
-              : src
-          );
+          images.push(src.startsWith(sep) ? src.slice(1) : src);
         });
         if (images.length) {
           toProcess.push(...images);
@@ -122,7 +119,10 @@ export default function lazyload(options: ILazyLoadOptions) {
             } else {
               const image = await sharp(file.contents);
               const meta = await image.metadata();
-              const shrunk = await image.resize(64, Math.ceil(256 / (meta.width || 256) / (meta.height || 256)));
+              const shrunk = await image.resize(
+                64,
+                Math.ceil(256 / (meta.width || 256) / (meta.height || 256))
+              );
               const filepath = join(tmpdir(), file.filename);
               await write(filepath, await shrunk.toBuffer());
               const sqipped = await sqip({ filename: filepath });
@@ -135,12 +135,15 @@ export default function lazyload(options: ILazyLoadOptions) {
             }
           }
         } else {
-          log(`"${ filename }" not in changed files or file cache.`, 'warning');
+          log(`"${filename}" not in changed files or file cache.`, 'warning');
           return;
         }
       });
     if (promises.length) {
-      log(`LQIPing ${promises.length} images; this may take a while.`, 'warning');
+      log(
+        `LQIPing ${promises.length} images; this may take a while.`,
+        'warning'
+      );
     }
     await new Queue({
       concurrency: opts.concurrency
@@ -170,8 +173,10 @@ export default function lazyload(options: ILazyLoadOptions) {
 
     if (imagesChanged || filesChanged) {
       const elapsed = (Date.now() - time) / 1000;
-      log(`Processed ${ imagesChanged } images across ${ filesChanged } files in ${elapsed}.`);
+      log(
+        `Processed ${imagesChanged} images across ${filesChanged} files in ${elapsed}.`
+      );
     }
     return files;
-  }, Plugin.ALL)
+  }, Plugin.ALL);
 }

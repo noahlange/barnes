@@ -40,7 +40,12 @@ export type BarnesAllFn<I, O> = (
 
 export type BarnesFromFn<O> = (barnes: Barnes<void>) => O[] | Promise<O[]>;
 
-export type BarnesComparatorFn<I> = (a: I, b: I, files: I[], barnes: Barnes<I>) => number | Promise<number>;
+export type BarnesComparatorFn<I> = (
+  a: I,
+  b: I,
+  files: I[],
+  barnes: Barnes<I>
+) => number | Promise<number>;
 
 export type BarnesReducerFn<I, O> = (
   reducer: O,
@@ -57,7 +62,7 @@ export type SomeKindaBarnesFunction<I, O> =
   | BarnesFilterFn<I>
   | BarnesReducerFn<I, O>
   | BarnesForEachFn<I>
-  | BarnesFn<I, O>
+  | BarnesFn<I, O>;
 
 export type BarnesPlugin<F extends SomeKindaBarnesFunction<any, any>> = F & {
   BARNES: Plugin;
@@ -90,20 +95,28 @@ export function plugin<I, O>(
   return Object.assign(fn, { BARNES: type });
 }
 
-function sort<T>(barnes: Barnes<T>, files: T[], callback: BarnesComparatorFn<T>): Promise<T[]> {
+function sort<T>(
+  barnes: Barnes<T>,
+  files: T[],
+  callback: BarnesComparatorFn<T>
+): Promise<T[]> {
   return new Promise((resolve, reject) => {
-    ams(files, async (a, b, done) => {
-      const res = await callback(a, b, files, barnes);
-      const num = res > 0 ? 1 : res < 0 ? -1 : 0;
-      done(null, num);
-    }, (error, result) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(result);
+    ams(
+      files,
+      async (a, b, done) => {
+        const res = await callback(a, b, files, barnes);
+        const num = res > 0 ? 1 : res < 0 ? -1 : 0;
+        done(null, num);
+      },
+      (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result);
+        }
       }
-    })
-  })
+    );
+  });
 }
 
 export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
@@ -413,27 +426,21 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
     return this as Barnes<O>;
   }
 
+  public use<I extends T>(plugin: BarnesPlugin<BarnesFilterFn<I>>): Barnes<I>;
   public use<I extends T>(
-    plugin: BarnesPlugin<BarnesFilterFn<I>>
-  ): Barnes<I>;
-  public use<I extends T>(
-    plugin: BarnesPlugin<BarnesForEachFn<I>>
+    useable: BarnesPlugin<BarnesForEachFn<I>>
   ): Barnes<void>;
   public use<I extends T, O>(
-    plugin: BarnesPlugin<BarnesAllFn<I, O>> | BarnesPlugin<BarnesMapFn<I, O>>
+    useable: BarnesPlugin<BarnesAllFn<I, O>> | BarnesPlugin<BarnesMapFn<I, O>>
   ): Barnes<O>;
-  public use<O>(
-    plugin: BarnesPlugin<BarnesFromFn<O>>
-  ): Barnes<O>;
-  public use<I, O>(
-    plugin: BarnesAllFn<I, O>
-  )
+  public use<O>(useable: BarnesPlugin<BarnesFromFn<O>>): Barnes<O>;
+  public use<I, O>(useable: BarnesAllFn<I, O>);
   public use<I extends T, O>(
-    plugin: BarnesPlugin<SomeKindaBarnesFunction<I, O>> | BarnesAllFn<I, O>
+    useable: BarnesPlugin<SomeKindaBarnesFunction<I, O>> | BarnesAllFn<I, O>
   ): Barnes<O> {
-    const plugins = Array.isArray(plugin) ? plugin : [plugin];
-    for (const p of plugins) {
-      this[p.BARNES || Plugin.ALL].call(this, p);
+    const useables = Array.isArray(useable) ? useable : [useable];
+    for (const u of useables) {
+      this[u.BARNES || Plugin.ALL].call(this, u);
     }
     return this as Barnes<O>;
   }

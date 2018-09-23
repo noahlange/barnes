@@ -4,10 +4,4 @@ import lqip from './lqip';
 import penthouse from './penthouse';
 import purge from './purge';
 
-export {
-  gzip,
-  imagemin,
-  lqip,
-  purge,
-  penthouse
-};
+export { gzip, imagemin, lqip, purge, penthouse };

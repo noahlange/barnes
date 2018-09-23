@@ -1,4 +1,3 @@
-
 import { plugin, Plugin } from 'barnes';
 import { readFile, stat, Stats, writeFile } from 'fs';
 import { ensureFile } from 'fs-extra';
@@ -12,15 +11,14 @@ export interface IFile {
   contents: Buffer;
   stats: Stats;
   filename: string;
+  absolute: string;
   [key: string]: any;
 }
 
 export function source(path: string, isWatching: boolean = false) {
   return plugin(async barnes => {
     const empty: string[] = [];
-    return isWatching
-      ? empty
-      : globby(join(barnes.base, path));
+    return isWatching ? empty : globby(join(barnes.base, path));
   }, Plugin.FROM);
 }
 
@@ -29,9 +27,10 @@ export function read() {
   const statP = promisify(stat);
   return plugin<string, IFile>(async (file, files, barnes) => {
     return {
+      absolute: file,
       contents: await readFileP(file),
       filename: file.replace(barnes.base + sep, ''),
-      stats: await statP(file),
+      stats: await statP(file)
     };
   }, Plugin.MAP);
 }
@@ -58,7 +57,11 @@ export function frontmatter() {
   }, Plugin.ALL);
 }
 
-export function write(name: string, contents: Buffer | string, encoding?: string) {
+export function write(
+  name: string,
+  contents: Buffer | string,
+  encoding?: string
+) {
   return new Promise((resolve, reject) => {
     ensureFile(name, err1 => {
       if (err1) {

@@ -3,3 +3,5 @@ lib
 types
 .nyc_output
 coverage
+.vscode
+sandbox

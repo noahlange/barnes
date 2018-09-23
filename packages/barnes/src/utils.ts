@@ -10,9 +10,14 @@ export function md5(data: Buffer) {
 }
 
 export function logger(pkg: string) {
-  const colors = { info: chalk.blue, warning: chalk.yellow, danger: chalk.red, success: chalk.green };
+  const colors = {
+    danger: chalk.red,
+    info: chalk.blue,
+    success: chalk.green,
+    warning: chalk.yellow,
+  };
   return (message: string, level: ErrorLevel = 'info') => {
     // tslint:disable-next-line
-    console.log(`[${ colors[level](pkg) }]`, message);
-  } 
+    console.log(`[${colors[level](pkg)}]`, message);
+  };
 }

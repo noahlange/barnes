@@ -23,6 +23,5 @@ export default function(opts = { clean: true }) {
     const href = join(dhref, basename(file.filename));
 
     return { ...file, path, dhref, href };
-  },
-  Plugin.MAP);
+  }, Plugin.MAP);
 }

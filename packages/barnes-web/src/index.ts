@@ -8,6 +8,7 @@ export interface IFile {
   contents: Buffer;
   layout?: string;
   collection?: string;
+  absolute?: string;
 }
 
 export { collections, layouts, markdown, paths };

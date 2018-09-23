@@ -9,12 +9,12 @@ import { dotfiles, frontmatter, IFile, read, source } from './utils';
 
 const log = logger('fs/watch');
 
-export default function(path: string) {
+export default function(glob: string) {
   let gaze;
   let active = [];
   let toProcess = [];
 
-  function _watch(barnes: Barnes<string[]>, glob: string) {
+  function watcher(barnes: Barnes<string[]>) {
     const throttled = throttle(async () => {
       active = dedupe(toProcess);
       log(`${active.length} files updated, rebuilding.`, 'info');
@@ -44,11 +44,9 @@ export default function(path: string) {
   }
 
   return plugin<any, IFile>(async function watch(files, barnes) {
-    barnes.metadata.watch = true;
-
     const out = await new Barnes(barnes.base)
-      .use(source(path, !!gaze))
-      .use(_watch(barnes, path))
+      .use(source(glob, !!gaze))
+      .use(watcher(barnes))
       .use(dotfiles())
       .use(read())
       .use(frontmatter());
@@ -59,11 +57,12 @@ export default function(path: string) {
     return [
       ...files,
       ...out.map(f => {
-        const parsed = parse(path);
+        const parsed = parse(glob);
         const replace = parsed.base === '.' ? '' : parsed.base;
         return {
           ...f,
-          filename: f.filename.replace(replace, '')
+          filename: f.filename
+            .replace(replace, '')
             .replace(new RegExp(`^${sep}`), '')
         };
       })

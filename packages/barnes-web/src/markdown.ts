@@ -6,12 +6,9 @@ import { IFile } from './index';
 
 interface IBarnesMarkdownOpts {
   markdown?: MarkdownIt.Options;
-};
+}
 
-export default function markdown(
-  options: IBarnesMarkdownOpts = {}
-) {
-
+export default function markdown(options: IBarnesMarkdownOpts = {}) {
   const md = new MarkdownIt({
     html: true,
     typographer: true,

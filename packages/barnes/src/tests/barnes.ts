@@ -60,9 +60,7 @@ test('count', async t => {
 
 test('tap', async t => {
   const out = [];
-  await new Barnes()
-    .from(() => [1, 2, 3, 4, 5])
-    .tap(n => out.push(n));
+  await new Barnes().from(() => [1, 2, 3, 4, 5]).tap(n => out.push(n));
 
-  t.deepEqual(out, [ 1, 2, 3, 4, 5 ]);
-})
+  t.deepEqual(out, [1, 2, 3, 4, 5]);
+});

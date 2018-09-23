@@ -15,7 +15,7 @@ export default path => {
     const filename = join(barnes.base, path, file.filename);
     await w(filename, file.contents, { encoding: 'utf8' });
     if (file === files[files.length - 1]) {
-      log(`Wrote ${ files.length } files to disk.`, 'success');
+      log(`Wrote ${files.length} files to disk.`, 'success');
     }
     return { ...file, filename };
   }, Plugin.MAP);

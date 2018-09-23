@@ -3,7 +3,6 @@ import Barnes from 'barnes';
 import collections from '../collections';
 
 test('should build collections with pattern shorthand', async t => {
-
   const files = [
     { filename: 'files/foo/index.md' },
     { filename: 'files/bar.md' }
@@ -11,16 +10,17 @@ test('should build collections with pattern shorthand', async t => {
 
   const res = await new Barnes()
     .from(() => files)
-    .use(collections({
-      files: 'files/**/*.md'
-    }))
+    .use(
+      collections({
+        files: 'files/**/*.md'
+      })
+    )
     .all((_, barnes) => barnes.metadata.collections);
 
   t.deepEqual(res, { files });
 });
 
 test('should build collections with pattern longhand', async t => {
-
   const files = [
     { filename: 'files/foo/index.md' },
     { filename: 'files/bar.md' }
@@ -28,18 +28,19 @@ test('should build collections with pattern longhand', async t => {
 
   const res = await new Barnes()
     .from(() => files)
-    .use(collections({
-      files: {
-        pattern: 'files/**/*.md'
-      }
-    }))
+    .use(
+      collections({
+        files: {
+          pattern: 'files/**/*.md'
+        }
+      })
+    )
     .all((_, barnes) => barnes.metadata.collections);
 
   t.deepEqual(res, { files });
 });
 
 test('should build collections from metadata', async t => {
-
   interface IHumdinger {
     filename: string;
     collection: string;
@@ -59,8 +60,7 @@ test('should build collections from metadata', async t => {
 });
 
 test('should build multiple collections', async t => {
-
-  const humdingers= [
+  const humdingers = [
     { filename: '1', collection: 'humdingers' },
     { filename: '2', collection: 'humdingers' }
   ];
@@ -72,10 +72,10 @@ test('should build multiple collections', async t => {
   ];
 
   const res = await new Barnes()
-    .use(() => [ ...humdingers, ...files ])
+    .use(() => [...humdingers, ...files])
     .use(collections({ files: 'files/**/*' }))
     .all((_, barnes) => barnes.metadata.collections.files)
     .count();
 
   t.deepEqual(res, 2);
-})
+});

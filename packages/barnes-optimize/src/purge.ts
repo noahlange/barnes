@@ -31,7 +31,7 @@ export default function purge(options: IBarnesPurgePluginOpts = {}) {
 
   const htmlCache: Record<string, IFile> = {};
   const cssCache: Record<string, IFile> = {};
-  
+
   return plugin(async (files: IFile[]) => {
     let total = 0;
 
@@ -64,22 +64,24 @@ export default function purge(options: IBarnesPurgePluginOpts = {}) {
     const allStyles = Object.entries(cssCache);
 
     for (let i = 0; i < purged.length; i++) {
-      const [ filename, file ] = allStyles[i];
+      const [filename, file] = allStyles[i];
       const css = purged[i].css;
+      // if the modified file isn't in the changed file list, add it.
       const found = files.findIndex(f => f.filename === filename);
       if (found > -1) {
-        files[found].contents = Buffer.from(css);
+        files[found] = {
+          ...files[found],
+          contents: Buffer.from(css)
+        };
         total++;
       } else if (file.contents.toString() !== css) {
-        const res = { ...file, contents: Buffer.from(css) };
-        files.push(res);
-        cssCache[filename] = res;
+        files.push({ ...file, contents: Buffer.from(css) });
         total++;
       }
     }
 
     if (total) {
-      log(`Purged ${ total } files.`, 'success');
+      log(`Purged ${total} files.`, 'success');
     }
 
     return files;
