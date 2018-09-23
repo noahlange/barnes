@@ -5,7 +5,7 @@
   "private": true,
   "license": "MIT",
   "scripts": {
-    "pretty": "prettier --write 'packages/*/src/**/*.ts'",
+    "pretty": "prettier --write 'packages/*/src/**/*.ts' 'packages/*/types/**/*.d.ts'",
     "lint": "lerna exec --parallel tslint src --config ../../tslint.json",
     "test": "nyc ava",
     "build": "lerna exec --parallel -- tsc"

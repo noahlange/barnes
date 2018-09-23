@@ -17,6 +17,7 @@ export enum Plugin {
   MIN = 'min',
   REDUCE = 'reduce',
   REDUCE_RIGHT = 'reduceRight',
+  REVERSE = 'reverse',
   SORT = 'sort',
   TAKE = 'take',
   TAKE_LAST = 'takeLast',
@@ -32,9 +33,10 @@ export type BarnesFn<I, O> = (
 ) => Promise<O> | O;
 
 export type Useable<I, O> =
-  | BarnesPlugin<SomeKindaFunction<I, O>>
   | BatchFn<I, O>
+  | BarnesPlugin<SomeKindaFunction<I, O>>
   | Barnes<O>;
+
 export type MapFn<I, O> = BarnesFn<I, O>;
 export type ForEachFn<I> = BarnesFn<I, void>;
 export type FilterFn<I> = BarnesFn<I, boolean>;
@@ -309,6 +311,14 @@ export default class Barnes<T> implements PromiseLike<any>, Promise<any> {
       },
       name: comparator.name,
       type: Plugin.MIN
+    });
+    return this;
+  }
+
+  public [Plugin.REVERSE]<I extends T>(): Barnes<I> {
+    this.stack.push({
+      callback: files => files.reverse(),
+      type: Plugin.SORT
     });
     return this;
   }

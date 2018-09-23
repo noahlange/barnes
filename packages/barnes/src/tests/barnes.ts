@@ -1,9 +1,10 @@
 import test from 'ava';
-import Barnes from '../barnes';
+import Barnes, { plugin, Plugin } from '../barnes';
+
+const from = () => [1, 2, 3, 4, 5];
 
 test('barnes in barnes in barnes', async t => {
   const one = new Barnes().from(() => [1, 2, 3, 4, 5]);
-
   const two = new Barnes().from(() => [1, 2, 3, 4, 5]);
 
   const three = await new Barnes()
@@ -76,4 +77,30 @@ test('tap', async t => {
   await new Barnes().from(() => [1, 2, 3, 4, 5]).tap(n => out.push(n));
 
   t.deepEqual(out, [1, 2, 3, 4, 5]);
+});
+
+test('reverse', async t => {
+  const out = await new Barnes().from(() => [1, 2, 3, 4, 5]).reverse();
+  t.deepEqual(out, [5, 4, 3, 2, 1]);
+});
+
+test('take & co.', async t => {
+  const one = await new Barnes().from(from).take(3);
+  const two = await new Barnes().from(from).takeLast(3);
+  const three = await new Barnes().from(from).takeUntil(n => n > 3);
+  const four = await new Barnes().from(from).takeWhile(n => n <= 3);
+  t.deepEqual(one, [1, 2, 3]);
+  t.deepEqual(two, [3, 4, 5]);
+  t.deepEqual(three, [1, 2, 3]);
+  t.deepEqual(four, [1, 2, 3]);
+});
+
+test('use should accept plugin', async t => {
+  const a = await new Barnes().use(plugin(() => [1, 2, 3], Plugin.FROM));
+  const b = await new Barnes()
+    .from(from)
+    .use(all => all.map(n => n * 5))
+    .take(2);
+  t.deepEqual(a, [1, 2, 3]);
+  t.deepEqual(b, [5, 10]);
 });
